@@ -1,7 +1,6 @@
-// pages/api/auth/[...nextauth].js
 import NextAuth from 'next-auth';
 import Providers from 'next-auth/providers';
-import pool from '../../../db'; // Import the database connection
+import pool from '../../../db';
 
 export default NextAuth({
     providers: [

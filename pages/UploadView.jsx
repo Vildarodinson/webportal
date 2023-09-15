@@ -2,7 +2,6 @@ import React, { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useRouter } from 'next/router';
 
-
 function UploadAndViewPage() {
   const router = useRouter();
   const { loggedInUsername } = router.query;
@@ -80,10 +79,15 @@ function UploadAndViewPage() {
   };
 
   useEffect(() => {
-    // Set the initial state with data from local storage
-    const dataFromLocalStorage = getDataFromLocalStorage();
-    setUploadedData(dataFromLocalStorage);
-  }, []);
+    if (!loggedInUsername) {
+      // Redirect the user to the login page
+      router.push('/login'); // Change '/login' to the actual URL of your login page
+    } else {
+      // Set the initial state with data from local storage
+      const dataFromLocalStorage = getDataFromLocalStorage();
+      setUploadedData(dataFromLocalStorage);
+    }
+  }, [loggedInUsername, router]);
 
   const handleLogout = () => {
     // Clear local storage
@@ -623,6 +627,18 @@ function UploadAndViewPage() {
       </d>
     </div>
   );
+}
+
+export async function getServerSideProps(context) {
+  // Fetch the loggedInUsername from the server-side context
+  const { query } = context;
+  const loggedInUsername = query.loggedInUsername || null;
+
+  return {
+    props: {
+      loggedInUsername,
+    },
+  };
 }
 
 export default UploadAndViewPage;
