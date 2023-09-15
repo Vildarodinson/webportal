@@ -31,7 +31,7 @@ function LoginForm() {
     if (response.ok) {
       // Login successful
       setLoginStatus('Login successful');
-      router.push('/UploadView');
+      router.push(`/UploadView?loggedInUsername=${formData.username}`);
     } else {
       // Login failed
       setLoginStatus('Wrong username or password');
