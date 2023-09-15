@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { useUser } from './api/UserContext';
+import Cookies from 'js-cookie';
 
 function LoginForm() {
   const [formData, setFormData] = useState({
@@ -9,6 +11,7 @@ function LoginForm() {
 
   const [loginStatus, setLoginStatus] = useState(null);
   const router = useRouter();
+  const { setLoggedInUsername } = useUser();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,12 +34,14 @@ function LoginForm() {
     if (response.ok) {
       // Login successful
       setLoginStatus('Login successful');
-      router.push(`/UploadView?loggedInUsername=${formData.username}`);
+      Cookies.set('loggedInUsername', formData.username);
+      router.push('/UploadView');
     } else {
       // Login failed
       setLoginStatus('Wrong username or password');
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

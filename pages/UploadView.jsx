@@ -1,10 +1,12 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useRouter } from 'next/router';
+import { useUser } from './api/UserContext';
+import Cookies from 'js-cookie';
 
 function UploadAndViewPage() {
   const router = useRouter();
-  const { loggedInUsername } = router.query;
+  const { loggedInUsername, setLoggedInUsername } = useUser();
   const localStorageKey = 'uploadedData';
   const getDataFromLocalStorage = () => {
     if (typeof localStorage !== 'undefined') {
@@ -79,21 +81,25 @@ function UploadAndViewPage() {
   };
 
   useEffect(() => {
-    if (!loggedInUsername) {
-      // Redirect the user to the login page
-      router.push('/login'); // Change '/login' to the actual URL of your login page
+    const storedUsername = Cookies.get('loggedInUsername');
+    if (storedUsername && !loggedInUsername) {
+      setLoggedInUsername(storedUsername);
+    } else if (!loggedInUsername) {
+      // If there's no loggedInUsername and no cookie, redirect to login
+      router.push('/login'); // Change '/login' to your login route
     } else {
       // Set the initial state with data from local storage
       const dataFromLocalStorage = getDataFromLocalStorage();
       setUploadedData(dataFromLocalStorage);
     }
-  }, [loggedInUsername, router]);
+  }, [loggedInUsername, setLoggedInUsername, router]);
 
   const handleLogout = () => {
     // Clear local storage
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(localStorageKey);
     }
+    Cookies.remove('loggedInUsername');
 
     // Redirect to the login page
     router.push('/login'); // Change '/login' to the actual URL of your login page
