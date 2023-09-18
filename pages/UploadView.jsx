@@ -3,6 +3,8 @@ import { useDropzone } from 'react-dropzone';
 import { useRouter } from 'next/router';
 import { useUser } from './api/UserContext';
 import Cookies from 'js-cookie';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 function UploadAndViewPage() {
   const router = useRouter();
@@ -310,88 +312,92 @@ function UploadAndViewPage() {
       setUploadStatus('Error updating row');
     }
   };
+
+  const generatePDF = () => {
+    const doc = new jsPDF();
   
+    // Get the data from local storage
+    const dataFromLocalStorage = getDataFromLocalStorage();
+  
+    // Define the columns and their widths
+    const columns = [
+      'Identifier', 'Code', 'Start Date', 'End Date',
+      'Numeric Value', 'Percentage', 'Another Numeric', 'Date'
+    ];
+    const columnWidths = [20, 20, 20, 20, 20, 20, 20, 20];
+  
+    // Calculate the total width of the table
+    const tableWidth = columnWidths.reduce((total, width) => total + width, 0);
+  
+    // Calculate the left margin to center the table on the page
+    const leftMargin = (doc.internal.pageSize.width - tableWidth) / 2;
+  
+    // Initialize the table with headers
+    doc.text('Exported Data', 10, 10);
+    doc.autoTable({
+      head: [columns],
+      startY: 20,
+      margin: { left: leftMargin }, // Center the table
+      styles: { fillColor: [100, 100, 100] },
+      columnStyles: {
+        0: { cellWidth: columnWidths[0] },
+        1: { cellWidth: columnWidths[1] },
+        2: { cellWidth: columnWidths[2] },
+        3: { cellWidth: columnWidths[3] },
+        4: { cellWidth: columnWidths[4] },
+        5: { cellWidth: columnWidths[5] },
+        6: { cellWidth: columnWidths[6] },
+        7: { cellWidth: columnWidths[7] }
+      },
+    });
+  
+    // Loop through the data and add rows to the table
+    dataFromLocalStorage.forEach((item) => {
+      const rowData = item.data.split('|').filter((value) => value.trim() !== '');
+      doc.autoTable({
+        body: [rowData],
+        columnStyles: {
+          0: { cellWidth: columnWidths[0] },
+          1: { cellWidth: columnWidths[1] },
+          2: { cellWidth: columnWidths[2] },
+          3: { cellWidth: columnWidths[3] },
+          4: { cellWidth: columnWidths[4] },
+          5: { cellWidth: columnWidths[5] },
+          6: { cellWidth: columnWidths[6] },
+          7: { cellWidth: columnWidths[7] }
+        },
+        margin: { left: leftMargin }, // Center the table
+      });
+    });
+  
+    // Return the PDF data as a Blob
+    return doc.output('blob');
+  };
 
   const handleExportToPdf = async () => {
     try {
-      // Prompt the user for their Gmail email address
-      const recipientEmail = prompt('Enter your Gmail email address:');
+      const pdfBlob = generatePDF();
   
-      if (recipientEmail) {
-        console.log('Email:', recipientEmail);
+      // Send a POST request to store the PDF
+      const storePdfResponse = await fetch('/api/store-pdf', {
+        method: 'POST',
+        body: pdfBlob,
+        headers: {
+          'Content-Type': 'application/pdf', // Set the content type to PDF
+        },
+      });
   
-        // Send the email to your backend along with a request to fetch the generated PDF
-        const response = await fetch('/api/send-pdf', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            recipientEmail, // Pass the recipientEmail to the backend
-          }),
-        });
+      if (storePdfResponse.ok) {
+        console.log('PDF stored successfully');
   
-        if (response.ok) {
-          console.log('Email sent successfully');
-          alert('Email sent successfully');
-        } else {
-          console.error('Email sending failed');
-          alert('Email sending failed');
-        }
-      } else {
-        alert('Email is required');
-      }
-    } catch (error) {
-      console.error('Error sending email:', error);
-      alert('Error sending email');
-    }
-  };
-
-  const handleExportToCSV = async () => {
-    try {
-      // Prompt the user for their Gmail email address
-      const recipientEmail = prompt('Enter your Gmail email address:');
-
-      if (recipientEmail) {
-        console.log('Email:', recipientEmail);
-
-        // Send the email to your backend along with a request to fetch the generated PDF
-        const response = await fetch('/api/send-csv', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            recipientEmail, // Pass the recipientEmail to the backend
-          }),
-        });
-
-        if (response.ok) {
-          console.log('Email sent successfully');
-          alert('Email sent successfully');
-        } else {
-          console.error('Email sending failed');
-          alert('Email sending failed');
-        }
-      } else {
-        alert('Email is required');
-      }
-    } catch (error) {
-      console.error('Error sending email:', error);
-      alert('Error sending email');
-    }
-    };
-
-    const handleExportToJSON = async () => {
-      try {
         // Prompt the user for their Gmail email address
         const recipientEmail = prompt('Enter your Gmail email address:');
-
+  
         if (recipientEmail) {
           console.log('Email:', recipientEmail);
-
+  
           // Send the email to your backend along with a request to fetch the generated PDF
-          const response = await fetch('/api/send-json', {
+          const sendPdfResponse = await fetch('/api/send-pdf', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -400,8 +406,8 @@ function UploadAndViewPage() {
               recipientEmail, // Pass the recipientEmail to the backend
             }),
           });
-
-          if (response.ok) {
+  
+          if (sendPdfResponse.ok) {
             console.log('Email sent successfully');
             alert('Email sent successfully');
           } else {
@@ -411,34 +417,244 @@ function UploadAndViewPage() {
         } else {
           alert('Email is required');
         }
-      } catch (error) {
-        console.error('Error sending email:', error);
-        alert('Error sending email');
+      } else {
+        console.error('Error storing PDF:', storePdfResponse.statusText);
+        alert('Error storing PDF');
       }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF');
     }
+  };
+
+  const generateCSV = () => {
+    // Get the data from local storage
+    const dataFromLocalStorage = getDataFromLocalStorage();
+  
+    // Define the columns
+    const columns = [
+      'Identifier', 'Code', 'Start Date', 'End Date',
+      'Numeric Value', 'Percentage', 'Another Numeric', 'Date'
+    ];
+
+    const columnWidths = columns.map((header) => ({
+      header,
+      dataKey: header,
+      width: header === 'Numeric Value' || header === 'Another Numeric Value' ? 15 : undefined,
+    }));
+  
+    // Create an array to hold the CSV rows
+    const csvRows = [columns.join(',')];
+  
+    // Loop through the data and add rows to the CSV
+    dataFromLocalStorage.forEach((item) => {
+      const rowData = item.data.split('|').map((value, index) => {
+        if (index === 4 || index === 6) { // Adjust the column indices as needed
+          return `"${value.trim()}"`; // Wrap with quotes for columns E and G
+        }
+        return `"${value.trim()}"`;
+      });
+      const csvRow = rowData.join(',');
+      csvRows.push(csvRow);
+    });
+  
+    // Combine all rows into a single CSV string
+    const csvContent = csvRows.join('\n');
+  
+    // Create a Blob with the CSV content
+    const csvBlob = new Blob([csvContent], { type: 'text/csv' });
+  
+    return csvBlob;
+  };
+  
+  const handleExportToCSV = async () => {
+    try {
+      // Generate the CSV Blob
+      const csvBlob = generateCSV();
+  
+      // Send a POST request to store the CSV
+      const storeCsvResponse = await fetch('/api/store-csv', {
+        method: 'POST',
+        body: csvBlob, // Send the CSV Blob directly
+        headers: {
+          'Content-Type': 'text/csv', // Set the content type to CSV
+        },
+      });
+  
+      if (storeCsvResponse.ok) {
+        console.log('CSV file stored successfully');
+  
+        // Prompt the user for their Gmail email address
+        const recipientEmail = prompt('Enter your Gmail email address:');
+  
+        if (recipientEmail) {
+          console.log('Email:', recipientEmail);
+  
+          // Send the email to your backend along with a request to fetch the generated CSV
+          const sendCsvResponse = await fetch('/api/send-csv', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              recipientEmail, // Pass the recipientEmail to the backend
+            }),
+          });
+  
+          if (sendCsvResponse.ok) {
+            console.log('Email sent successfully');
+            alert('Email sent successfully');
+          } else {
+            console.error('Email sending failed');
+            alert('Email sending failed');
+          }
+        } else {
+          alert('Email is required');
+        }
+      } else {
+        console.error('Error storing CSV:', storeCsvResponse.statusText);
+        alert('Error storing CSV');
+      }
+    } catch (error) {
+      console.error('Error generating CSV:', error);
+      alert('Error generating CSV');
+    }
+  };
+
+  const columns = [
+    'Identifier', 'Code', 'Start Date', 'End Date',
+    'Numeric Value', 'Percentage', 'Another Numeric Value', 'Date'
+  ];
+
+  const generateJSON = () => {
+    // Get the data from local storage
+    const dataFromLocalStorage = getDataFromLocalStorage();
+  
+    // Create an array to hold the JSON objects
+    const jsonObjects = [];
+  
+    // Define the columns
+    const columns = [
+      'Identifier', 'Code', 'Start Date', 'End Date',
+      'Numeric Value', 'Percentage', 'Another Numeric Value', 'Date'
+    ];
+  
+    // Loop through the data and add objects to the JSON array
+    dataFromLocalStorage.forEach((item) => {
+      const rowData = item.data.split('|').map((value, index) => {
+        if (index === 4 || index === 6) { // Adjust the column indices as needed
+          return value.trim();
+        }
+        return value.trim();
+      });
+  
+      // Check if rowData is empty (all values are empty strings)
+      if (rowData.some(value => value !== '')) {
+        // Create an object with keys from columns and values from rowData
+        const jsonObject = {};
+        columns.forEach((column, index) => {
+          jsonObject[column] = rowData[index];
+        });
+  
+        jsonObjects.push(jsonObject);
+      }
+    });
+  
+    // Convert the JSON array to a JSON string with proper formatting
+    const jsonString = JSON.stringify(jsonObjects, null, 2);
+  
+    // Create a Blob with the JSON content
+    const jsonBlob = new Blob([jsonString], { type: 'application/json' });
+  
+    return jsonBlob;
+  };
+  
+const handleExportToJSON = async () => {
+  try {
+    // Generate the JSON Blob
+    const jsonBlob = generateJSON();
+
+    // Create a FormData object
+    const formData = new FormData();
+
+    // Append the JSON Blob directly as a blob without specifying filename and content type
+    formData.append('jsonFile', jsonBlob);
+
+    // Send a POST request to store the JSON
+    const storeJsonResponse = await fetch('/api/store-json', {
+      method: 'POST',
+      body: formData,
+    });
+  
+      if (storeJsonResponse.ok) {
+        console.log('JSON file stored successfully');
+  
+        // Prompt the user for their Gmail email address
+        const recipientEmail = prompt('Enter your Gmail email address:');
+  
+        if (recipientEmail) {
+          console.log('Email:', recipientEmail);
+  
+          // Send the email to your backend along with a request to fetch the generated JSON
+          const sendJsonResponse = await fetch('/api/send-json', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              recipientEmail, // Pass the recipientEmail to the backend
+            }),
+          });
+  
+          if (sendJsonResponse.ok) {
+            console.log('Email sent successfully');
+            alert('Email sent successfully');
+          } else {
+            console.error('Email sending failed');
+            alert('Email sending failed');
+          }
+        } else {
+          alert('Email is required');
+        }
+      } else {
+        console.error('Error storing JSON:', storeJsonResponse.statusText);
+        alert('Error storing JSON');
+      }
+    } catch (error) {
+      console.error('Error generating JSON:', error);
+      alert('Error generating JSON');
+    }
+  };
+  
 
     const handleCancelEdit = () => {
       setEditingRowId(null); // Exit editing mode for this row
     };
 
-  const handleDelete = async (id) => {
-    try {
-      const response = await fetch(`/api/delete?id=${id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setUploadStatus('Row deleted successfully');
-        setUploadedData((prevData) => prevData.filter((item) => item.id !== id));
-      } else {
-        setUploadStatus('Delete failed');
+    const handleDelete = async (id) => {
+      try {
+        const response = await fetch(`/api/delete?id=${id}`, {
+          method: 'DELETE',
+        });
+    
+        if (response.ok) {
+          setUploadStatus('Row deleted successfully');
+    
+          // Remove the deleted row from local storage
+          setUploadedData((prevData) => {
+            const updatedData = prevData.filter((item) => item.id !== id);
+            saveDataToLocalStorage(updatedData); // Update local storage
+            return updatedData;
+          });
+        } else {
+          setUploadStatus('Delete failed');
+        }
+      } catch (error) {
+        console.error('Error deleting row:', error);
+        setUploadStatus('Error deleting row');
       }
-    } catch (error) {
-      console.error('Error deleting row:', error);
-      setUploadStatus('Error deleting row');
-    }
-  };
-
+    };
+    
   return (
     <div className="bg-gray-100 p-4">
       {loggedInUsername && (
