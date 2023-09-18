@@ -731,101 +731,103 @@ const handleExportToJSON = async () => {
                 {value}
               </td>
             ))}
-{loggedInUsername === 'admin' ? (
-  // Buttons will be shown for users logged in as 'admin'
-  <td className="px-2">
-    <button onClick={() => handleEdit(item.id, item.data)} className="bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg mr-2">
-      Edit
-    </button>
-    <button onClick={() => handleDelete(item.id)} className="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg">
-      Delete
-    </button>
-  </td>
-) : null}
+              {loggedInUsername === 'admin' ? (
+                // Buttons will be shown for users logged in as 'admin'
+                <td className="px-2">
+                  <button onClick={() => handleEdit(item.id, item.data)} className="bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg mr-2">
+                    Edit
+                  </button>
+                  <button onClick={() => handleDelete(item.id)} className="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg">
+                    Delete
+                  </button>
+                </td>
+              ) : null}
 
-        </React.Fragment>
-      )}
-    </tr>
-  ))}
+                      </React.Fragment>
+                    )}
+                  </tr>
+                ))}
         </tbody>
       </table>
     </div>
-      <div>
-        <h3 className="text-2xl font-semibold">Insert New Row:</h3>
-        <form className="mt-4">
-          <input
-            type="text"
-            name="identifier"
-            placeholder="Identifier"
-            value={formData.identifier}
-            onChange={(e) => handleFormChange(e, 'identifier')}
-          />
-
-          <input
-            type="text"
-            name="code"
-            placeholder="Code"
-            value={formData.code}
-            onChange={(e) => handleFormChange(e, 'code')}
-          />
-
-          <input
-            type="text"
-            name="start_date"
-            placeholder="Start Date"
-            value={formData.start_date}
-            onChange={(e) => handleFormChange(e, 'start_date')}
-          />
-
-          <input
-            type="text"
-            name="end_date"
-            placeholder="End Date"
-            value={formData.end_date}
-            onChange={(e) => handleFormChange(e, 'end_date')}
-          />
-
-          <input
-            type="text"
-            name="numeric_value"
-            placeholder="Numeric Value"
-            value={formData.numeric_value}
-            onChange={(e) => handleFormChange(e, 'numeric_value')}
-          />
-
-          <input
-            type="text"
-            name="percentage"
-            placeholder="Percentage"
-            value={formData.percentage}
-            onChange={(e) => handleFormChange(e, 'percentage')}
-          />
-
-          <input
-            type="text"
-            name="another_numeric_value"
-            placeholder="Another Numeric Value"
-            value={formData.another_numeric_value}
-            onChange={(e) => handleFormChange(e, 'another_numeric_value')}
-          />
-
-          <input
-            type="text"
-            name="date"
-            placeholder="Date"
-            value={formData.date}
-            onChange={(e) => handleFormChange(e, 'date')}
-          />
-          <button type="button" onClick={handleInsert} className="bg-green-500 text-white px-2 py-1 rounded">
-            Insert
-          </button>
-          <div>
-            <p>example: 8501706|DQVG|06/01/2018|06/30/2018|100|%|999|06/30/2018|</p>
-            <p>example: identifier|code|start date|end date|numeric value|percentage|another numeric value|date|
-            </p>
+    {loggedInUsername === 'admin' &&(
+            <div>
+            <h3 className="text-2xl font-semibold">Insert New Row:</h3>
+            <form className="mt-4">
+              <input
+                type="text"
+                name="identifier"
+                placeholder="Identifier"
+                value={formData.identifier}
+                onChange={(e) => handleFormChange(e, 'identifier')}
+              />
+    
+              <input
+                type="text"
+                name="code"
+                placeholder="Code"
+                value={formData.code}
+                onChange={(e) => handleFormChange(e, 'code')}
+              />
+    
+              <input
+                type="text"
+                name="start_date"
+                placeholder="Start Date"
+                value={formData.start_date}
+                onChange={(e) => handleFormChange(e, 'start_date')}
+              />
+    
+              <input
+                type="text"
+                name="end_date"
+                placeholder="End Date"
+                value={formData.end_date}
+                onChange={(e) => handleFormChange(e, 'end_date')}
+              />
+    
+              <input
+                type="text"
+                name="numeric_value"
+                placeholder="Numeric Value"
+                value={formData.numeric_value}
+                onChange={(e) => handleFormChange(e, 'numeric_value')}
+              />
+    
+              <input
+                type="text"
+                name="percentage"
+                placeholder="Percentage"
+                value={formData.percentage}
+                onChange={(e) => handleFormChange(e, 'percentage')}
+              />
+    
+              <input
+                type="text"
+                name="another_numeric_value"
+                placeholder="Another Numeric Value"
+                value={formData.another_numeric_value}
+                onChange={(e) => handleFormChange(e, 'another_numeric_value')}
+              />
+    
+              <input
+                type="text"
+                name="date"
+                placeholder="Date"
+                value={formData.date}
+                onChange={(e) => handleFormChange(e, 'date')}
+              />
+              <button type="button" onClick={handleInsert} className="bg-green-500 text-white px-2 py-1 rounded">
+                Insert
+              </button>
+              <div>
+                <p>example: 8501706|DQVG|06/01/2018|06/30/2018|100|%|999|06/30/2018|</p>
+                <p>example: identifier|code|start date|end date|numeric value|percentage|another numeric value|date|
+                </p>
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
+    )}
       <div className="export-options mt-4">
         <div>
           <h3 className="text-2xl font-semibold">Export to PDF:</h3>
@@ -846,17 +848,21 @@ const handleExportToJSON = async () => {
           </button>
         </div>
       </div>
-      <div className="mt-4">
-        <button onClick={handleClearData} disabled={isClearing} className="bg-red-500 text-white px-2 py-1 rounded">
-          Clear Data
-        </button>
-        {clearStatus && <p className="text-red-600">{clearStatus}</p>}
-      </div>
-      <d>
-        <p>
-          only for clearing data for table called data
-        </p>
-      </d>
+      {loggedInUsername === 'admin' && (
+          <div>
+          <div className="mt-4">
+                  <button onClick={handleClearData} disabled={isClearing} className="bg-red-500 text-white px-2 py-1 rounded">
+                    Clear Data
+                  </button>
+                  {clearStatus && <p className="text-red-600">{clearStatus}</p>}
+                </div>
+                <d>
+                  <p>
+                    only for clearing data for table called data
+                  </p>
+                </d>
+        </div>
+      )}
     </div>
   );
 }
