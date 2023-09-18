@@ -83,7 +83,9 @@ function UploadAndViewPage() {
   };
 
   useEffect(() => {
+    // Check the cookie first
     const storedUsername = Cookies.get('loggedInUsername');
+  
     if (storedUsername && !loggedInUsername) {
       setLoggedInUsername(storedUsername);
     } else if (!loggedInUsername) {
@@ -95,18 +97,22 @@ function UploadAndViewPage() {
       setUploadedData(dataFromLocalStorage);
     }
   }, [loggedInUsername, setLoggedInUsername, router]);
-
+  
   const handleLogout = () => {
     // Clear local storage
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(localStorageKey);
+      localStorage.removeItem('loggedInUsername'); // Remove the username from localStorage
     }
     Cookies.remove('loggedInUsername');
-
+    
+    // Clear the user context or state
+    setLoggedInUsername(null);
+  
     // Redirect to the login page
     router.push('/login'); // Change '/login' to the actual URL of your login page
   };
-
+  
   const tableFields = [
     'identifier',
     'code',
@@ -725,14 +731,18 @@ const handleExportToJSON = async () => {
                 {value}
               </td>
             ))}
-          <td className="px-2">
-            <button onClick={() => handleEdit(item.id, item.data)} className="bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg mr-2">
-              Edit
-            </button>
-            <button onClick={() => handleDelete(item.id)} className="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg">
-              Delete
-            </button>
-          </td>
+{loggedInUsername === 'admin' ? (
+  // Buttons will be shown for users logged in as 'admin'
+  <td className="px-2">
+    <button onClick={() => handleEdit(item.id, item.data)} className="bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg mr-2">
+      Edit
+    </button>
+    <button onClick={() => handleDelete(item.id)} className="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg">
+      Delete
+    </button>
+  </td>
+) : null}
+
         </React.Fragment>
       )}
     </tr>
